@@ -34,7 +34,7 @@ from .models import (BranchChange, CoursesMtech, InitialRegistration, StudentReg
                      Register, Thesis, FinalRegistration, ThesisTopicProcess,
                      Constants, FeePayments, TeachingCreditRegistration, SemesterMarks, 
                      MarkSubmissionCheck, Dues,AssistantshipClaim, MTechGraduateSeminarReport,
-                     PhDProgressExamination,CourseRequested, course_registration, MessDue, Assistantship_status)
+                     PhDProgressExamination,CourseRequested, course_registration, MessDue, Assistantship_status,DueType,NewDue)
 from notification.views import academics_module_notif
 from .forms import BranchChangeForm
 from django.db.models.functions import Concat,ExtractYear,ExtractMonth,ExtractDay,Cast
@@ -467,6 +467,15 @@ def academic_procedures_student(request):
                 objb.branches=request.POST['branches']
                 objb.save()
 
+        dues = NewDue.objects.filter(roll_no=request.user.username).select_related('due_type')
+    
+        for due in dues:
+            if not (due.check1 and due.check2):
+                status = "unclear"
+                break
+        else:
+            status = "clear"
+
         return render(
                           request, '../templates/academic_procedures/academic.html',
                           {'details': details,
@@ -530,6 +539,8 @@ def academic_procedures_student(request):
                            'BranchChangeForm': BranchChangeForm(),
                            'BranchFlag':branchchange_flag,
                            'assistantship_flag' : student_status,
+                            'dues': dues,
+                            'status': status,
                            }
                 )
 
